@@ -1,0 +1,113 @@
+.task-enter {
+  opacity: 0;
+  transform: scale(0.9);
+}
+.task-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 300ms, transform 300ms;
+}
+.task-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+.task-exit-active {
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.task-card {
+  background: linear-gradient(135deg, #f3f4f6, #ffffff);
+  border-radius: 10px;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.task-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
+}
+
+.task-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+li {
+  margin-bottom: 10px;
+}
+
+input,
+button {
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+input:focus,
+button:hover {
+  transform: translateY(-2px);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+.task-enter {
+  opacity: 0;
+  transform: scale(0.9);
+}
+.task-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 300ms, transform 300ms;
+}
+.task-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+.task-exit-active {
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.task-card {
+  background: linear-gradient(135deg, #f3f4f6, #ffffff);
+  border-radius: 10px;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.task-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
+}
+
+.task-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+li {
+  margin-bottom: 10px;
+}
+
+input,
+button {
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+input:focus,
+button:hover {
+  transform: translateY(-2px);
+}

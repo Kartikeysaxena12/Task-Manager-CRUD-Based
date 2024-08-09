@@ -1,0 +1,1106 @@
+app.jsx
+
+// src/components/TaskManager.jsx
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import moment from "moment";
+
+const TaskManager = () => {
+  const [tasks, setTasks] = useState([]);
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState("");
+  const [editingTask, setEditingTask] = useState(null);
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const fetchTasks = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/tasks");
+      setTasks(response.data);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    }
+  };
+
+  const handleCreateOrUpdateTask = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingTask) {
+        await axios.put(`http://localhost:5000/api/tasks/${editingTask._id}`, {
+          title,
+          date,
+          completed: editingTask.completed,
+        });
+      } else {
+        await axios.post("http://localhost:5000/api/tasks", { title, date });
+      }
+      setTitle("");
+      setDate("");
+      setEditingTask(null);
+      fetchTasks();
+    } catch (error) {
+      console.error("Error creating/updating task:", error);
+    }
+  };
+
+  const handleEditTask = (task) => {
+    setTitle(task.title);
+    setDate(moment(task.date).format("YYYY-MM-DD"));
+    setEditingTask(task);
+  };
+
+  const handleToggleComplete = async (taskId) => {
+    try {
+      await axios.patch(`http://localhost:5000/api/tasks/${taskId}/completed`);
+      fetchTasks();
+    } catch (error) {
+      console.error("Error toggling task completion:", error);
+    }
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/tasks/${taskId}`);
+      fetchTasks();
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
+  };
+
+  const tasksByDate = tasks.reduce((acc, task) => {
+    const date = moment(task.date).format("YYYY-MM-DD");
+    acc[date] = acc[date] || [];
+    acc[date].push(task);
+    return acc;
+  }, {});
+
+  return (
+    <div className="p-4 max-w-lg mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Task Manager</h1>
+      <form onSubmit={handleCreateOrUpdateTask} className="mb-4">
+        <input
+          type="text"
+          placeholder="Task Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full p-2 mb-2 border rounded"
+          required
+        />
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          className="w-full p-2 mb-2 border rounded"
+          required
+        />
+        <button
+          type="submit"
+          className="bg-blue-500 text-white font-bold py-2 px-4 rounded w-full"
+        >
+          {editingTask ? "Update Task" : "Add Task"}
+        </button>
+      </form>
+      <div>
+        {Object.keys(tasksByDate).map((date) => (
+          <div key={date} className="mb-6">
+            <h2 className="text-xl font-semibold mb-2">
+              {moment(date).calendar(null, {
+                sameDay: "[Today]",
+                nextDay: "[Tomorrow]",
+                nextWeek: "dddd",
+                lastDay: "[Yesterday]",
+                lastWeek: "[Last] dddd",
+                sameElse: "DD/MM/YYYY",
+              })}
+            </h2>
+            <ul className="list-disc pl-5">
+              {tasksByDate[date].map((task) => (
+                <li key={task._id} className="mb-2 flex items-center">
+                  <span
+                    className={`flex-1 ${
+                      task.completed ? "line-through text-gray-500" : ""
+                    }`}
+                  >
+                    {task.title}
+                  </span>
+                  <button
+                    onClick={() => handleToggleComplete(task._id)}
+                    className="text-green-500 hover:underline mr-2"
+                  >
+                    {task.completed ? "Undo" : "Complete"}
+                  </button>
+                  <button
+                    onClick={() => handleEditTask(task)}
+                    className="text-blue-500 hover:underline mr-2"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteTask(task._id)}
+                    className="text-red-500 hover:underline"
+                  >
+                    Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default TaskManager;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Make the following changes to the task manager application:
+1. Make a navbar and divide the tasks into:
+              i) Work Related
+             ii) Personal Development
+             iii) Household Chores
+             iv) Social Tasks
+             v) Administrative Tasks
+such that, on writing any task it should have the option to categorize into the types mentioned above.
+
+2. I want the tasks chosen for any particular date and type to be contained in a folder which consists of the twelve respective months and their dates, so that the task is directly added into the exact place in the folder based on its date. Showcase this using a folder card or whatever is technically suitable. e.g.: Folder: "Year 2024", "Year 2025" etc. which includes all 12 months in which the task of any particular date is added and can be accessed. Ensure that the CRUD operation is functional in wherever the task is placed in the folder
+
+3. Ensure there's appropriate text color and background color (in gradient format) given wherever styling is necessary. Make its aesthetics stand out entirely
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import moment from "moment";
+import Navbar from "../Navbar";
+import { CSSTransition, TransitionGroup } from "react-transition-group";
+import "./TaskManager.css"; // Import the CSS file for animations
+
+const TaskManager = () => {
+  const categories = [
+    "Work Related",
+    "Personal Development",
+    "Household Chores",
+    "Social Tasks",
+    "Administrative Tasks",
+  ];
+  const [tasks, setTasks] = useState([]);
+  const [newTask, setNewTask] = useState("");
+  const [taskDate, setTaskDate] = useState(moment().format("YYYY-MM-DD"));
+  const [selectedCategory, setSelectedCategory] = useState(categories[0]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentTask, setCurrentTask] = useState(null);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [selectedCategory, taskDate]);
+
+  const fetchTasks = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/tasks", {
+        params: {
+          category: selectedCategory,
+          date: taskDate,
+        },
+      });
+      const data = Array.isArray(response.data) ? response.data : [];
+      setTasks(data);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      setTasks([]);
+    }
+  };
+
+  const addOrUpdateTask = async () => {
+    if (!newTask) return;
+    try {
+      if (isEditing) {
+        await axios.put(`http://localhost:5000/api/tasks/${currentTask._id}`, {
+          name: newTask,
+          category: selectedCategory,
+          date: taskDate,
+          completed: currentTask.completed, // Maintain original completion status
+        });
+      } else {
+        await axios.post("http://localhost:5000/api/tasks", {
+          name: newTask,
+          category: selectedCategory,
+          date: taskDate,
+          completed: false, // New tasks are not completed by default
+        });
+      }
+      setNewTask("");
+      setIsEditing(false);
+      setCurrentTask(null);
+      fetchTasks(); // Refresh tasks after adding/updating
+    } catch (error) {
+      console.error("Error adding/updating task:", error);
+    }
+  };
+
+  const deleteTask = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/tasks/${id}`);
+      fetchTasks();
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
+  };
+
+  const toggleComplete = async (id, completed) => {
+    try {
+      await axios.put(`http://localhost:5000/api/tasks/${id}`, {
+        completed: !completed,
+      });
+      fetchTasks();
+    } catch (error) {
+      console.error("Error updating task:", error);
+    }
+  };
+
+  const editTask = (task) => {
+    setNewTask(task.name);
+    setIsEditing(true);
+    setCurrentTask(task);
+  };
+
+  const getTasksByYearAndMonth = () => {
+    const groupedTasks = {};
+
+    tasks.forEach((task) => {
+      const year = moment(task.date).format("YYYY");
+      const month = moment(task.date).format("MMMM");
+
+      if (!groupedTasks[year]) groupedTasks[year] = {};
+      if (!groupedTasks[year][month]) groupedTasks[year][month] = [];
+      groupedTasks[year][month].push(task);
+    });
+
+    return groupedTasks;
+  };
+
+  const groupedTasks = getTasksByYearAndMonth();
+
+  return (
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
+      <Navbar
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+      />
+      <div className="w-full max-w-3xl p-6 bg-white shadow-lg rounded-lg mt-4">
+        <div className="flex justify-between mb-4 space-x-4">
+          <input
+            type="date"
+            value={taskDate}
+            onChange={(e) => setTaskDate(e.target.value)}
+            className="border p-2 rounded bg-gradient-to-r from-blue-500 to-green-500 text-white"
+          />
+          <input
+            type="text"
+            value={newTask}
+            onChange={(e) => setNewTask(e.target.value)}
+            placeholder="New Task"
+            className="border p-2 rounded bg-gradient-to-r from-white to-blue-500"
+          />
+          <button
+            onClick={addOrUpdateTask}
+            className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-2 rounded"
+          >
+            {isEditing ? "Update Task" : "Add Task"}
+          </button>
+        </div>
+
+        <div className="grid gap-4">
+          {Object.entries(groupedTasks).map(([year, months]) => (
+            <div key={year} className="mb-6">
+              <h2 className="text-xl font-bold mb-2">{year}</h2>
+              {Object.entries(months).map(([month, tasks]) => (
+                <div key={month} className="mb-4">
+                  <h3 className="text-lg font-semibold">{month}</h3>
+                  <TransitionGroup component="ul" className="task-list">
+                    {tasks.map((task) => (
+                      <CSSTransition
+                        key={task._id}
+                        timeout={500}
+                        classNames="task"
+                      >
+                        <li className="flex items-center justify-between border-b p-2">
+                          <span
+                            className={`flex-1 ${
+                              task.completed ? "line-through" : ""
+                            }`}
+                            onClick={() =>
+                              toggleComplete(task._id, task.completed)
+                            }
+                          >
+                            {task.name}
+                          </span>
+                          <button
+                            className="text-blue-500 hover:text-yellow-700 pr-2"
+                            onClick={() => editTask(task)}
+                          >
+                            Modify
+                          </button>
+                          <button
+                            className="text-red-500 hover:text-red-700"
+                            onClick={() => deleteTask(task._id)}
+                          >
+                            Delete
+                          </button>
+                        </li>
+                      </CSSTransition>
+                    ))}
+                  </TransitionGroup>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default TaskManager;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import moment from "moment";
+import Navbar from "../Navbar";
+import { CSSTransition, TransitionGroup } from "react-transition-group";
+import "./TaskManager.css"; // Import the CSS file for animations
+
+const TaskManager = () => {
+  const categories = [
+    "Work Related",
+    "Personal Development",
+    "Household Chores",
+    "Social Tasks",
+    "Administrative Tasks",
+  ];
+  const [tasks, setTasks] = useState([]);
+  const [newTask, setNewTask] = useState("");
+  const [taskDate, setTaskDate] = useState(moment().format("YYYY-MM-DD"));
+  const [selectedCategory, setSelectedCategory] = useState(categories[0]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentTask, setCurrentTask] = useState(null);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [selectedCategory, taskDate]);
+
+  const fetchTasks = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/tasks", {
+        params: {
+          category: selectedCategory,
+          date: taskDate,
+        },
+      });
+      const data = Array.isArray(response.data) ? response.data : [];
+      setTasks(data);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      setTasks([]);
+    }
+  };
+
+  const addOrUpdateTask = async () => {
+    if (!newTask) return;
+    try {
+      if (isEditing) {
+        await axios.put(`http://localhost:5000/api/tasks/${currentTask._id}`, {
+          name: newTask,
+          category: selectedCategory,
+          date: taskDate,
+          completed: currentTask.completed, // Maintain original completion status
+        });
+      } else {
+        await axios.post("http://localhost:5000/api/tasks", {
+          name: newTask,
+          category: selectedCategory,
+          date: taskDate,
+          completed: false, // New tasks are not completed by default
+        });
+      }
+      setNewTask("");
+      setIsEditing(false);
+      setCurrentTask(null);
+      fetchTasks();
+    } catch (error) {
+      console.error("Error adding/updating task:", error);
+    }
+  };
+
+  const deleteTask = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/tasks/${id}`);
+      fetchTasks();
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
+  };
+
+  const toggleComplete = async (id, completed) => {
+    try {
+      await axios.put(`http://localhost:5000/api/tasks/${id}`, {
+        completed: !completed,
+      });
+      fetchTasks();
+    } catch (error) {
+      console.error("Error updating task:", error);
+    }
+  };
+
+  const editTask = (task) => {
+    setNewTask(task.name);
+    setIsEditing(true);
+    setCurrentTask(task);
+  };
+
+  const getTasksByDate = () => {
+    const groupedTasks = {};
+
+    tasks.forEach((task) => {
+      const date = moment(task.date).format("YYYY-MM-DD");
+
+      if (!groupedTasks[date]) groupedTasks[date] = [];
+      groupedTasks[date].push(task);
+    });
+
+    return groupedTasks;
+  };
+
+  const groupedTasks = getTasksByDate();
+
+  return (
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
+      <Navbar
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+      />
+      <div className="w-full max-w-3xl p-6 bg-white shadow-lg rounded-lg mt-4">
+        <div className="flex justify-between mb-4 space-x-4">
+          <input
+            type="date"
+            value={taskDate}
+            onChange={(e) => setTaskDate(e.target.value)}
+            className="border p-2 rounded bg-gradient-to-r from-blue-500 to-green-500 text-white"
+          />
+          <input
+            type="text"
+            value={newTask}
+            onChange={(e) => setNewTask(e.target.value)}
+            placeholder="New Task"
+            className="border p-2 rounded bg-gradient-to-r from-white to-blue-500"
+          />
+          <button
+            onClick={addOrUpdateTask}
+            className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-2 rounded"
+          >
+            {isEditing ? "Update Task" : "Add Task"}
+          </button>
+        </div>
+
+        <TransitionGroup className="grid gap-4">
+          {Object.entries(groupedTasks).map(([date, tasks]) => (
+            <CSSTransition key={date} timeout={500} classNames="task-card">
+              <div className="task-card bg-white p-4 rounded-lg shadow-lg">
+                <h3 className="text-lg font-bold mb-3">
+                  {moment(date).format("MMMM Do, YYYY")}
+                </h3>
+                <ul>
+                  {tasks.map((task) => (
+                    <li
+                      key={task._id}
+                      className="flex items-center justify-between border-b p-2"
+                    >
+                      <span
+                        className={`flex-1 ${
+                          task.completed ? "line-through" : ""
+                        }`}
+                        onClick={() => toggleComplete(task._id, task.completed)}
+                      >
+                        {task.name}
+                      </span>
+                      <button
+                        className="text-blue-500 hover:text-yellow-700 pr-2"
+                        onClick={() => editTask(task)}
+                      >
+                        Modify
+                      </button>
+                      <button
+                        className="text-red-500 hover:text-red-700"
+                        onClick={() => deleteTask(task._id)}
+                      >
+                        Delete
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </CSSTransition>
+          ))}
+        </TransitionGroup>
+      </div>
+    </div>
+  );
+};
+
+export default TaskManager;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* CARD OUTSIDE OF INPUT PARAMS */
+
+
+
+
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import moment from "moment";
+import Navbar from "../Navbar";
+import { CSSTransition, TransitionGroup } from "react-transition-group";
+import Carousel from "react-multi-carousel";
+import "react-multi-carousel/lib/styles.css";
+import "./TaskManager.css";
+
+const TaskManager = () => {
+  const categories = [
+    "Work Related",
+    "Personal Development",
+    "Household Chores",
+    "Social Tasks",
+    "Administrative Tasks",
+  ];
+  const [tasks, setTasks] = useState([]);
+  const [newTask, setNewTask] = useState("");
+  const [taskDate, setTaskDate] = useState(moment().format("YYYY-MM-DD"));
+  const [selectedCategory, setSelectedCategory] = useState(categories[0]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentTask, setCurrentTask] = useState(null);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [selectedCategory, taskDate]);
+
+  const fetchTasks = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/tasks", {
+        params: {
+          category: selectedCategory,
+          date: taskDate,
+        },
+      });
+      const data = Array.isArray(response.data) ? response.data : [];
+      setTasks(data);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      setTasks([]);
+    }
+  };
+
+  const addOrUpdateTask = async () => {
+    if (!newTask) return;
+    try {
+      if (isEditing) {
+        await axios.put(`http://localhost:5000/api/tasks/${currentTask._id}`, {
+          name: newTask,
+          category: selectedCategory,
+          date: taskDate,
+          completed: currentTask.completed,
+        });
+      } else {
+        await axios.post("http://localhost:5000/api/tasks", {
+          name: newTask,
+          category: selectedCategory,
+          date: taskDate,
+          completed: false,
+        });
+      }
+      setNewTask("");
+      setIsEditing(false);
+      setCurrentTask(null);
+      fetchTasks();
+    } catch (error) {
+      console.error("Error adding/updating task:", error);
+    }
+  };
+
+  const deleteTask = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/tasks/${id}`);
+      fetchTasks();
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
+  };
+
+  const toggleComplete = async (id, completed) => {
+    try {
+      await axios.put(`http://localhost:5000/api/tasks/${id}`, {
+        completed: !completed,
+      });
+      fetchTasks();
+    } catch (error) {
+      console.error("Error updating task:", error);
+    }
+  };
+
+  const editTask = (task) => {
+    setNewTask(task.name);
+    setIsEditing(true);
+    setCurrentTask(task);
+  };
+
+  const getTasksByDate = () => {
+    const groupedTasks = {};
+
+    tasks.forEach((task) => {
+      const date = moment(task.date).format("YYYY-MM-DD");
+
+      if (!groupedTasks[date]) groupedTasks[date] = [];
+      groupedTasks[date].push(task);
+    });
+
+    return groupedTasks;
+  };
+
+  const groupedTasks = getTasksByDate();
+
+  return (
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
+      <Navbar
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+      />
+      <div className="w-full max-w-3xl p-6 bg-white shadow-lg rounded-lg mt-4">
+        <div className="flex justify-between mb-4 space-x-4">
+          <input
+            type="date"
+            value={taskDate}
+            onChange={(e) => setTaskDate(e.target.value)}
+            className="border p-2 rounded bg-gradient-to-r from-blue-500 to-green-500 text-white"
+          />
+          <input
+            type="text"
+            value={newTask}
+            onChange={(e) => setNewTask(e.target.value)}
+            placeholder="New Task"
+            className="border p-2 rounded bg-gradient-to-r from-white to-blue-500"
+          />
+          <button
+            onClick={addOrUpdateTask}
+            className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-2 rounded"
+          >
+            {isEditing ? "Update Task" : "Add Task"}
+          </button>
+        </div>
+      </div>
+
+      {/* Cards Container for Different Dates */}
+      <div className="w-full max-w-5xl mt-8">
+        <Carousel
+          responsive={{
+            superLargeDesktop: {
+              breakpoint: { max: 4000, min: 3000 },
+              items: 5,
+            },
+            desktop: {
+              breakpoint: { max: 3000, min: 1024 },
+              items: 3,
+            },
+            tablet: {
+              breakpoint: { max: 1024, min: 464 },
+              items: 2,
+            },
+            mobile: {
+              breakpoint: { max: 464, min: 0 },
+              items: 1,
+            },
+          }}
+        >
+          {Object.entries(groupedTasks).map(([date, tasks]) => (
+            <div
+              key={date}
+              className="task-card bg-white shadow-lg rounded-lg p-4 m-2"
+            >
+              <h2 className="text-lg font-bold mb-2">
+                {moment(date).format("MMMM Do, YYYY")}
+              </h2>
+              <TransitionGroup component="ul" className="task-list">
+                {tasks.map((task) => (
+                  <CSSTransition key={task._id} timeout={500} classNames="task">
+                    <li className="flex items-center justify-between border-b p-2">
+                      <span
+                        className={`flex-1 ${
+                          task.completed ? "line-through" : ""
+                        }`}
+                        onClick={() => toggleComplete(task._id, task.completed)}
+                      >
+                        {task.name}
+                      </span>
+                      <button
+                        className="text-blue-500 hover:text-yellow-700 pr-2"
+                        onClick={() => editTask(task)}
+                      >
+                        Modify
+                      </button>
+                      <button
+                        className="text-red-500 hover:text-red-700"
+                        onClick={() => deleteTask(task._id)}
+                      >
+                        Delete
+                      </button>
+                    </li>
+                  </CSSTransition>
+                ))}
+              </TransitionGroup>
+            </div>
+          ))}
+        </Carousel>
+      </div>
+    </div>
+  );
+};
+
+export default TaskManager;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import moment from "moment";
+import Navbar from "../Navbar";
+import { CSSTransition, TransitionGroup } from "react-transition-group";
+import Carousel from "react-multi-carousel";
+import "react-multi-carousel/lib/styles.css";
+import "./TaskManager.css";
+
+const TaskManager = () => {
+  const categories = [
+    "Work Related",
+    "Personal Development",
+    "Household Chores",
+    "Social Tasks",
+    "Administrative Tasks",
+  ];
+  const [tasksByDate, setTasksByDate] = useState({});
+  const [newTask, setNewTask] = useState("");
+  const [taskDate, setTaskDate] = useState(moment().format("YYYY-MM-DD"));
+  const [selectedCategory, setSelectedCategory] = useState(categories[0]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentTask, setCurrentTask] = useState(null);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [selectedCategory, taskDate]);
+
+  const fetchTasks = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/tasks", {
+        params: {
+          category: selectedCategory,
+          date: taskDate,
+        },
+      });
+      const data = Array.isArray(response.data) ? response.data : [];
+
+      setTasksByDate((prevTasks) => ({
+        ...prevTasks,
+        [taskDate]: data,
+      }));
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      setTasksByDate((prevTasks) => ({
+        ...prevTasks,
+        [taskDate]: [],
+      }));
+    }
+  };
+
+  const addOrUpdateTask = async () => {
+    if (!newTask) return;
+    try {
+      if (isEditing) {
+        await axios.put(`http://localhost:5000/api/tasks/${currentTask._id}`, {
+          name: newTask,
+          category: selectedCategory,
+          date: taskDate,
+          completed: currentTask.completed,
+        });
+      } else {
+        await axios.post("http://localhost:5000/api/tasks", {
+          name: newTask,
+          category: selectedCategory,
+          date: taskDate,
+          completed: false,
+        });
+      }
+      setNewTask("");
+      setIsEditing(false);
+      setCurrentTask(null);
+      fetchTasks();
+    } catch (error) {
+      console.error("Error adding/updating task:", error);
+    }
+  };
+
+  const deleteTask = async (id, date) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/tasks/${id}`);
+      setTasksByDate((prevTasks) => {
+        const updatedTasks = { ...prevTasks };
+        updatedTasks[date] = updatedTasks[date].filter(
+          (task) => task._id !== id
+        );
+        return updatedTasks;
+      });
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
+  };
+
+  const toggleComplete = async (id, completed, date) => {
+    try {
+      await axios.put(`http://localhost:5000/api/tasks/${id}`, {
+        completed: !completed,
+      });
+      setTasksByDate((prevTasks) => {
+        const updatedTasks = { ...prevTasks };
+        updatedTasks[date] = updatedTasks[date].map((task) =>
+          task._id === id ? { ...task, completed: !completed } : task
+        );
+        return updatedTasks;
+      });
+    } catch (error) {
+      console.error("Error updating task:", error);
+    }
+  };
+
+  const editTask = (task) => {
+    setNewTask(task.name);
+    setIsEditing(true);
+    setCurrentTask(task);
+    setTaskDate(task.date);
+  };
+
+  const taskDates = Object.keys(tasksByDate).sort();
+
+  return (
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
+      <Navbar
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+      />
+      <div className="w-full max-w-3xl p-6 bg-white shadow-lg rounded-lg mt-4">
+        <div className="flex justify-between mb-4 space-x-4">
+          <input
+            type="date"
+            value={taskDate}
+            onChange={(e) => setTaskDate(e.target.value)}
+            className="border p-2 rounded bg-gradient-to-r from-blue-500 to-green-500 text-white"
+          />
+          <input
+            type="text"
+            value={newTask}
+            onChange={(e) => setNewTask(e.target.value)}
+            placeholder="New Task"
+            className="border p-2 rounded bg-gradient-to-r from-white to-blue-500"
+          />
+          <button
+            onClick={addOrUpdateTask}
+            className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-2 rounded"
+          >
+            {isEditing ? "Update Task" : "Add Task"}
+          </button>
+        </div>
+      </div>
+
+      {/* Cards Container for Different Dates */}
+      <div className="w-full max-w-5xl mt-8">
+        {taskDates.length > 5 ? (
+          <Carousel
+            responsive={{
+              superLargeDesktop: {
+                breakpoint: { max: 4000, min: 3000 },
+                items: 5,
+              },
+              desktop: {
+                breakpoint: { max: 3000, min: 1024 },
+                items: 3,
+              },
+              tablet: {
+                breakpoint: { max: 1024, min: 464 },
+                items: 2,
+              },
+              mobile: {
+                breakpoint: { max: 464, min: 0 },
+                items: 1,
+              },
+            }}
+          >
+            {taskDates.map((date) => (
+              <div
+                key={date}
+                className="task-card bg-white shadow-lg rounded-lg p-4 m-2"
+              >
+                <h2 className="text-lg font-bold mb-2">
+                  {moment(date).format("MMMM Do, YYYY")}
+                </h2>
+                <TransitionGroup component="ul" className="task-list">
+                  {tasksByDate[date].map((task) => (
+                    <CSSTransition
+                      key={task._id}
+                      timeout={500}
+                      classNames="task"
+                    >
+                      <li className="flex items-center justify-between border-b p-2">
+                        <span
+                          className={`flex-1 ${
+                            task.completed ? "line-through" : ""
+                          }`}
+                          onClick={() =>
+                            toggleComplete(task._id, task.completed, date)
+                          }
+                        >
+                          {task.name}
+                        </span>
+                        <button
+                          className="text-blue-500 hover:text-yellow-700 pr-2"
+                          onClick={() => editTask(task)}
+                        >
+                          Modify
+                        </button>
+                        <button
+                          className="text-red-500 hover:text-red-700"
+                          onClick={() => deleteTask(task._id, date)}
+                        >
+                          Delete
+                        </button>
+                      </li>
+                    </CSSTransition>
+                  ))}
+                </TransitionGroup>
+              </div>
+            ))}
+          </Carousel>
+        ) : (
+          <div className="flex flex-wrap">
+            {taskDates.map((date) => (
+              <div
+                key={date}
+                className="task-card bg-white shadow-lg rounded-lg p-4 m-2"
+              >
+                <h2 className="text-lg font-bold mb-2">
+                  {moment(date).format("MMMM Do, YYYY")}
+                </h2>
+                <TransitionGroup component="ul" className="task-list">
+                  {tasksByDate[date].map((task) => (
+                    <CSSTransition
+                      key={task._id}
+                      timeout={500}
+                      classNames="task"
+                    >
+                      <li className="flex items-center justify-between border-b p-2">
+                        <span
+                          className={`flex-1 ${
+                            task.completed ? "line-through" : ""
+                          }`}
+                          onClick={() =>
+                            toggleComplete(task._id, task.completed, date)
+                          }
+                        >
+                          {task.name}
+                        </span>
+                        <button
+                          className="text-blue-500 hover:text-yellow-700 pr-2"
+                          onClick={() => editTask(task)}
+                        >
+                          Modify
+                        </button>
+                        <button
+                          className="text-red-500 hover:text-red-700"
+                          onClick={() => deleteTask(task._id, date)}
+                        >
+                          Delete
+                        </button>
+                      </li>
+                    </CSSTransition>
+                  ))}
+                </TransitionGroup>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default TaskManager;

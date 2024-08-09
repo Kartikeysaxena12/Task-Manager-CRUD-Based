@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Styles */
+body {
+  @apply bg-gray-100;
+}
+
+.fixed {
+  position: fixed;
+  width: 100%;
+}
