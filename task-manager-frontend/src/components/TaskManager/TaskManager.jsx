@@ -2,9 +2,10 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import moment from "moment";
 import Navbar from "../Navbar";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+//import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
+import TaskCard from "../TaskComponents/TaskCard";
 import "./TaskManager.css";
 
 const TaskManager = () => {
@@ -220,222 +221,36 @@ const TaskManager = () => {
             }}
           >
             {taskDates.map((date) => (
-              <div
+              <TaskCard
                 key={date}
-                className="task-card bg-white shadow-lg rounded-lg p-4 m-2"
-              >
-                <div className="flex justify-between items-center">
-                  <h2 className="text-lg font-bold mb-2">
-                    {moment(date).format("MMMM Do, YYYY")}
-                  </h2>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => toggleCardOpenState(date)}
-                      className="text-gray-500 hover:text-gray-700"
-                    >
-                      {cardOpenState[date] ? "Close" : "Open"}
-                    </button>
-                    <button
-                      onClick={() => removeCard(date)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-                {cardOpenState[date] && (
-                  <DragDropContext
-                    onDragEnd={(result) => onDragEnd(result, date)}
-                  >
-                    <Droppable droppableId={date}>
-                      {(provided) => (
-                        <ul
-                          className="task-list"
-                          {...provided.droppableProps}
-                          ref={provided.innerRef}
-                        >
-                          {tasksByDate[date].map((task, index) => (
-                            <Draggable
-                              key={task._id}
-                              draggableId={task._id}
-                              index={index}
-                            >
-                              {(provided) => (
-                                <li
-                                  className={`flex items-center justify-between p-2 ${
-                                    task.completed
-                                      ? "bg-green-200"
-                                      : task.inProgress
-                                      ? "bg-yellow-200"
-                                      : "bg-white"
-                                  } rounded mb-2`}
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                >
-                                  <div className="flex items-center space-x-2">
-                                    <input
-                                      type="checkbox"
-                                      checked={task.completed}
-                                      onChange={() =>
-                                        toggleComplete(
-                                          task._id,
-                                          task.completed,
-                                          date
-                                        )
-                                      }
-                                    />
-                                    <span className="text-sm">{task.name}</span>
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    <button
-                                      onClick={() =>
-                                        toggleInProgress(
-                                          task._id,
-                                          task.inProgress,
-                                          date
-                                        )
-                                      }
-                                      className="text-yellow-500 hover:text-yellow-700"
-                                    >
-                                      {task.inProgress
-                                        ? "Mark Not In Progress"
-                                        : "Mark In Progress"}
-                                    </button>
-                                    <button
-                                      onClick={() => editTask(task)}
-                                      className="text-blue-500 hover:text-blue-700"
-                                    >
-                                      Edit
-                                    </button>
-                                    <button
-                                      onClick={() => deleteTask(task._id, date)}
-                                      className="text-red-500 hover:text-red-700"
-                                    >
-                                      Delete
-                                    </button>
-                                  </div>
-                                </li>
-                              )}
-                            </Draggable>
-                          ))}
-                          {provided.placeholder}
-                        </ul>
-                      )}
-                    </Droppable>
-                  </DragDropContext>
-                )}
-              </div>
+                date={date}
+                tasks={tasksByDate[date]}
+                cardOpenState={cardOpenState}
+                toggleCardOpenState={toggleCardOpenState}
+                removeCard={removeCard}
+                onDragEnd={onDragEnd}
+                toggleComplete={toggleComplete}
+                toggleInProgress={toggleInProgress}
+                editTask={editTask}
+                deleteTask={deleteTask}
+              />
             ))}
           </Carousel>
         ) : (
           taskDates.map((date) => (
-            <div
+            <TaskCard
               key={date}
-              className="task-card bg-white shadow-lg rounded-lg p-4 m-2"
-            >
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-bold mb-2">
-                  {moment(date).format("MMMM Do, YYYY")}
-                </h2>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => toggleCardOpenState(date)}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    {cardOpenState[date] ? "Close" : "Open"}
-                  </button>
-                  <button
-                    onClick={() => removeCard(date)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-              {cardOpenState[date] && (
-                <DragDropContext
-                  onDragEnd={(result) => onDragEnd(result, date)}
-                >
-                  <Droppable droppableId={date}>
-                    {(provided) => (
-                      <ul
-                        className="task-list"
-                        {...provided.droppableProps}
-                        ref={provided.innerRef}
-                      >
-                        {tasksByDate[date].map((task, index) => (
-                          <Draggable
-                            key={task._id}
-                            draggableId={task._id}
-                            index={index}
-                          >
-                            {(provided) => (
-                              <li
-                                className={`flex items-center justify-between p-2 ${
-                                  task.completed
-                                    ? "bg-green-200"
-                                    : task.inProgress
-                                    ? "bg-yellow-200"
-                                    : "bg-white"
-                                } rounded mb-2`}
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                              >
-                                <div className="flex items-center space-x-2">
-                                  <input
-                                    type="checkbox"
-                                    checked={task.completed}
-                                    onChange={() =>
-                                      toggleComplete(
-                                        task._id,
-                                        task.completed,
-                                        date
-                                      )
-                                    }
-                                  />
-                                  <span className="text-sm">{task.name}</span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <button
-                                    onClick={() =>
-                                      toggleInProgress(
-                                        task._id,
-                                        task.inProgress,
-                                        date
-                                      )
-                                    }
-                                    className="text-yellow-500 hover:text-yellow-700"
-                                  >
-                                    {task.inProgress
-                                      ? "Mark Not In Progress"
-                                      : "Mark In Progress"}
-                                  </button>
-                                  <button
-                                    onClick={() => editTask(task)}
-                                    className="text-blue-500 hover:text-blue-700"
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    onClick={() => deleteTask(task._id, date)}
-                                    className="text-red-500 hover:text-red-700"
-                                  >
-                                    Delete
-                                  </button>
-                                </div>
-                              </li>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                      </ul>
-                    )}
-                  </Droppable>
-                </DragDropContext>
-              )}
-            </div>
+              date={date}
+              tasks={tasksByDate[date]}
+              cardOpenState={cardOpenState}
+              toggleCardOpenState={toggleCardOpenState}
+              removeCard={removeCard}
+              onDragEnd={onDragEnd}
+              toggleComplete={toggleComplete}
+              toggleInProgress={toggleInProgress}
+              editTask={editTask}
+              deleteTask={deleteTask}
+            />
           ))
         )}
       </div>

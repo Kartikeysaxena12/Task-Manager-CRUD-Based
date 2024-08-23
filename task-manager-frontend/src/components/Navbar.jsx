@@ -16,8 +16,10 @@ const Navbar = ({ selectedCategory, setSelectedCategory }) => {
         <span
           key={category}
           onClick={() => setSelectedCategory(category)}
-          className={`cursor-pointer p-2 mx-1 rounded ${
-            selectedCategory === category ? "font-bold" : ""
+          className={`cursor-pointer p-2 mx-1 rounded transition-all duration-300 ease-in-out transform ${
+            selectedCategory === category
+              ? "font-bold bg-white text-blue-500 scale-105"
+              : "hover:bg-blue-200 hover:text-blue-500 hover:font-semibold hover:scale-105"
           }`}
         >
           {category}
