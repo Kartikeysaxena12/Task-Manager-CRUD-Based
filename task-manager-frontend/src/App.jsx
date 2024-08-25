@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import TaskManager from "./components/TaskManager/TaskManager";
+import TaskOrderTable from "./components/TaskComponents/TaskOrderTable"; // Import the new component
 
 const categories = [
   "Work Related",
@@ -13,6 +14,8 @@ const App = () => {
   return (
     <div>
       <TaskManager categories={categories} />
+      <TaskOrderTable selectedCategory={categories[0]} />{" "}
+      {/* Add the new component */}
     </div>
   );
 };

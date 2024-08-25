@@ -32,7 +32,7 @@ router.put("/:id", async (req, res) => {
   try {
     const updatedTask = await Task.findByIdAndUpdate(
       id,
-      { title, category, date, completed },
+      { title, category, date, completed, order },
       { new: true }
     );
     res.json(updatedTask);
