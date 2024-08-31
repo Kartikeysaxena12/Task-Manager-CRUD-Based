@@ -58,50 +58,52 @@ const TaskOrderTable = ({ selectedCategory }) => {
   };
 
   return (
-    <div className="w-full max-w-3xl p-6 bg-white shadow-lg rounded-lg mt-4">
-      <div className="mb-4">
-        <input
-          type="date"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          className="border p-2 rounded bg-gradient-to-r from-blue-500 to-green-500 text-white"
-        />
-      </div>
-      {tasks.length > 0 ? (
-        <table className="w-full border-collapse">
-          <thead>
-            <tr>
-              <th className="border p-2 text-left">Task</th>
-              <th className="border p-2 text-left">Order</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tasks.map((task) => (
-              <tr key={task._id}>
-                <td className="border p-2">{task.name}</td>
-                <td className="border p-2">
-                  <input
-                    type="number"
-                    value={taskOrder[task._id] || task.order || ""}
-                    onChange={(e) =>
-                      handleOrderChange(task._id, e.target.value)
-                    }
-                    className="border p-1 rounded"
-                  />
-                </td>
+    <div className="w-full mb-10 flex  justify-center">
+      <div className="w-full mx-20 max-w-xl p-6 bg-white shadow-lg rounded-lg mt-4">
+        <div className="mb-4">
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="border p-2 rounded bg-gradient-to-r from-blue-500 to-green-500 text-white"
+          />
+        </div>
+        {tasks.length > 0 ? (
+          <table className="w-full border-collapse">
+            <thead>
+              <tr>
+                <th className="border p-2 text-left">Task</th>
+                <th className="border p-2 text-left">Order</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <p>No tasks found for the selected date.</p>
-      )}
-      <button
-        onClick={handleSaveOrder}
-        className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-2 rounded mt-4"
-      >
-        Save Order
-      </button>
+            </thead>
+            <tbody>
+              {tasks.map((task) => (
+                <tr key={task._id}>
+                  <td className="border p-2">{task.name}</td>
+                  <td className="border p-2">
+                    <input
+                      type="number"
+                      value={taskOrder[task._id] || task.order || ""}
+                      onChange={(e) =>
+                        handleOrderChange(task._id, e.target.value)
+                      }
+                      className="border p-1 rounded"
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p>No tasks found for the selected date.</p>
+        )}
+        <button
+          onClick={handleSaveOrder}
+          className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-2 rounded mt-4"
+        >
+          Save Order
+        </button>
+      </div>
     </div>
   );
 };

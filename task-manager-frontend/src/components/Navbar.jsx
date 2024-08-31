@@ -11,7 +11,7 @@ const Navbar = ({ selectedCategory, setSelectedCategory }) => {
   ];
 
   return (
-    <div className="fixed top-0 left-0 w-full bg-gradient-to-r from-blue-500 to-green-500 text-white p-4 shadow-md">
+    <div className="fixed top-0 left-0 w-full bg-gradient-to-r from-blue-500 to-green-500 text-white p-4 shadow-md z-50">
       {categories.map((category) => (
         <span
           key={category}
